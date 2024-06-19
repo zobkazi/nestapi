@@ -1,10 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { UserDTO } from './dto/userDTO';
+import User from './models/User';
 
 @Injectable()
 export class UserService {
-  private readonly users = [{ id: 1, name: 'John Doe' }];
+  private users: UserDTO[] = [];
 
-  findAll() {
+  createUser(userDto: UserDTO): UserDTO {
+    try {
+      const validatedUser = UserDTO.safeParse(userDto);
+      if (!validatedUser.success) {
+        throw new BadRequestException(validatedUser.error.errors);
+      }
+
+      const newUser = new User(validatedUser.data);
+      this.users.push(newUser);
+      return newUser;
+    } catch (error) {
+      throw new BadRequestException(error.errors);
+    }
+  }
+
+  getAllUsers(): UserDTO[] {
     return this.users;
   }
 }
