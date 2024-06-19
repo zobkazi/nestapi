@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { UserDTO } from './dto/userDTO';
-import User from './models/User';
+import { UserDTO } from './dto/user.dto';
+import User from './models/user.schema';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class UserService {
     try {
       const validatedUser = UserDTO.safeParse(userDto);
       if (!validatedUser.success) {
-        return new BadRequestException('Invalid user data');
+        throw new BadRequestException(validatedUser.error.errors);
       }
       //check if user already exists
       const existingUser = this.users.find(
@@ -44,6 +44,7 @@ export class UserService {
       });
 
       this.users.push(newUser);
+      return newUser;
       return newUser;
     } catch (error) {
       throw new BadRequestException(error.errors);
