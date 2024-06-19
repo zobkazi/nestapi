@@ -30,8 +30,6 @@ import mongoose from 'mongoose';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('mongoURI'),
-        useUnifiedTopology: true,
-        useNewUrlParser: true,
       }),
       inject: [ConfigService],
     }),
