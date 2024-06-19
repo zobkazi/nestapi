@@ -7,10 +7,9 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  getAllUsers(): UserDTO[] {
-    return this.userService.getAllUsers();
+  async getAllUsers() {
+    return await this.userService.getAllUsers();
   }
-
   @Post('create')
   async createUser(@Body() userDto: UserDTO): Promise<UserDTO> {
     try {

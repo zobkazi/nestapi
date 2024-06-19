@@ -1,57 +1,41 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { UserDTO } from './dto/user.dto';
-import User from './models/user.schema';
+import { User } from './models/user.schema';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
-  private users: UserDTO[] = [];
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async createUser(userDto: UserDTO): Promise<UserDTO> {
-    try {
-      const validatedUser = UserDTO.safeParse(userDto);
-      if (!validatedUser.success) {
-        throw new BadRequestException(validatedUser.error.errors);
-      }
-      //check if user already exists
-      const existingUser = this.users.find(
-        (user) => user.email === validatedUser.data.email,
-      );
-      if (existingUser) {
-        throw new BadRequestException('User already exists');
-      }
-      // check if email is valid
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(validatedUser.data.email)) {
-        throw new BadRequestException('Invalid email address');
-      }
+  createUser = async (userDTO: UserDTO): Promise<User> => {
+    const { name, email, password } = userDTO;
 
-      // check if password is valid
-      if (validatedUser.data.password.length < 6) {
-        throw new BadRequestException('Password must be at least 6 characters');
-      }
-      //hash password
-      if (validatedUser.data.password.length < 6) {
-        throw new BadRequestException('Password must be at least 6 characters');
-      }
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(validatedUser.data.password, 10);
-      // Create new user with hashed password
-      const newUser = new User({
-        ...validatedUser.data,
-        password: hashedPassword,
-        createdAt: new Date(),
-      });
-
-      this.users.push(newUser);
-      return newUser;
-      return newUser;
-    } catch (error) {
-      throw new BadRequestException(error.errors);
+    const existingUser = await this.userModel.findOne({ email });
+    if (existingUser) {
+      throw new Error('User already exists');
     }
-  }
 
-  getAllUsers(): UserDTO[] {
-    return this.users;
-  }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new this.userModel({
+      name,
+      email,
+      password: hashedPassword,
+    });
+    return await newUser.save();
+  };
+
+  getAllUsers = async (): Promise<User[]> => {
+    return await this.userModel.find().exec();
+  };
+
+  getUserByEmail = async (email: string): Promise<User> => {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  };
 }
