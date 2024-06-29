@@ -1,7 +1,7 @@
 // src/modules/auth/auth.controller.ts
 import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LogInDTO } from './dto/log-in.dto';
+import { LogInDTO } from './dto/log-in.dto.ts';
 import { SignUpDTO } from './dto/sign-up.dto';
 import { LogInResponseDTO } from './dto/log-in-response.dto';
 import { SignUpResponseDTO } from './dto/sign-up-response.dto';
